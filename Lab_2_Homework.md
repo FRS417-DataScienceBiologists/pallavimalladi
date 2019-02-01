@@ -14,7 +14,7 @@ library("tidyverse")
 ```
 
 ```
-## ── Attaching packages ─────────────────────────────────────── tidyverse 1.2.1 ──
+## ── Attaching packages ─────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──
 ```
 
 ```
@@ -29,7 +29,7 @@ library("tidyverse")
 ```
 
 ```
-## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+## ── Conflicts ────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
 ## ✖ dplyr::filter() masks stats::filter()
 ## ✖ dplyr::lag()    masks stats::lag()
 ```
@@ -125,6 +125,8 @@ glimpse(msleep)
 
 ```r
 ## gives summary of names and number of variables within the matrix
+## gives number of observation and dimensions 
+## gives class of the data (integer, numeric, character, etc)
 ```
 
 ```r
@@ -180,6 +182,27 @@ new_frame %>%
 ##  8 Donkey               Equus           187 
 ##  9 Bottle-nosed dolphin Tursiops        173.
 ## 10 Tiger                Panthera        163.
+## # … with 73 more rows
+```
+
+```r
+new_frame
+```
+
+```
+## # A tibble: 83 x 3
+##    name                       genus        bodywt
+##    <chr>                      <chr>         <dbl>
+##  1 Cheetah                    Acinonyx     50    
+##  2 Owl monkey                 Aotus         0.48 
+##  3 Mountain beaver            Aplodontia    1.35 
+##  4 Greater short-tailed shrew Blarina       0.019
+##  5 Cow                        Bos         600    
+##  6 Three-toed sloth           Bradypus      3.85 
+##  7 Northern fur seal          Callorhinus  20.5  
+##  8 Vesper mouse               Calomys       0.045
+##  9 Dog                        Canis        14    
+## 10 Roe deer                   Capreolus    14.8  
 ## # … with 73 more rows
 ```
 
