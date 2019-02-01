@@ -1,0 +1,90 @@
+---
+title: "Lab 2 Homework"
+author: "Pallavi Malladi"
+date: "Winter 2019"
+output:
+  html_document:
+    keep_md: yes
+    theme: spacelab
+---
+## Load the tidyverse
+```{r}
+library("tidyverse")
+```
+
+## Mammals Sleep
+For this assignment, we are going to use built-in data on mammal sleep patterns.  
+```{r}
+msleep
+```
+
+## 1. From which publication are these data taken from? Don't do an internet search; show the code that you would use to find out in R.
+```{r}
+?msleep
+## prints out a description of the publication website with an "updated and expanded version of the mammal dataset."
+```
+
+## 2. Provide some summary information about the data to get you started; feel free to use the functions that you find most helpful.
+```{r}
+summary(msleep)
+## shows the column names, class of the values, and the basic statistics of the data (mean, median, mode, 1st -3rd quadrant, etc)
+```
+```{r}
+glimpse(msleep)
+## gives summary of names and number of variables within the matrix
+## gives number of observation and dimensions 
+## gives class of the data (integer, numeric, character, etc)
+```
+```{r}
+colnames(msleep) 
+## prints out the column names
+```
+```{r}
+rownames(msleep)
+## prints out the names of the rows within the data frame
+```
+
+## 3. Make a new data frame focused on body weight, but be sure to indicate the common name and genus of each mammal. Sort the data in descending order by body weight.
+```{r}
+new_frame<- select (msleep, name, genus, bodywt)
+new_frame %>% 
+  arrange(desc(bodywt)) ## descending body weight- copied from GitHub website since I didn't know the "arrange" command
+new_frame
+```
+
+## 4. We are interested in two groups; small and large mammals. Let's define small as less than or equal to 1kg body weight and large as greater than or equal to 200kg body weight. For our study, we are interested in body weight and sleep total Make two new dataframes (large and small) based on these parameters. Sort the data in descending order by body weight.
+```{r}
+small <- filter(msleep, bodywt<=1, sleep_total) 
+## organizes new data frame from msleep dataset with body weight and total sleep
+small %>% arrange(desc(bodywt))
+## descending body weight for small data frame
+```
+```{r}
+large <- filter (msleep, bodywt>=200, sleep_total) 
+## organizes new data frame from msleep dataset with body weight and total sleep
+large %>% arrange(desc(bodywt))
+## descending body weight for large data frame
+```
+
+## 5. Let's try to figure out if large mammals sleep, on average, longer than small mammals. What is the average sleep duration for large mammals as we have defined them?
+```{r}
+mean(large $ sleep_total)
+## prints the average of total sleep within the large data frame that we created in #4
+```
+
+## 6. What is the average sleep duration for small mammals as we have defined them?
+```{r}
+mean(small $ sleep_total)
+## prints the average of total sleep within the small data frame that we created in #4
+## why do we use the $ sign? What does this mean?
+```
+
+## 7. Which animals sleep at least 18 hours per day? Be sure to show the name, genus, order, and sleep total. Sort by order and sleep total.
+```{r}
+msleep %>%
+  filter (sleep_total>=18) %>% ## filters msleep to include data with at least 18hours of sleep/day
+  select (sleep_total, name, genus, order) %>% ##makes sure to include name, genus, and order for filtered sleep_total data
+  arrange (order, sleep_total) ## sorts order and sleep_total
+```
+
+## Push your final code to [GitHub](https://github.com/FRS417-DataScienceBiologists)
