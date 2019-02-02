@@ -1,0 +1,150 @@
+---
+title: "Tidy data"
+author: "Pallavi Malladi"
+date: "Winter 2019"
+output:
+  html_document:
+    keep_md: yes
+    theme: spacelab
+    toc: yes
+    toc_float: yes
+  pdf_document:
+    toc: yes
+---
+## Load the library
+```{r}
+library(tidyverse)
+```
+
+## The following data are results from a drug trial that shows the effect of four different treatments on six patients. The values represent resting heart rate.
+```{r}
+non_tidy1 <- data.frame(
+  patient= c("Margaret", "Frank", "Hawkeye", "Trapper", "Radar", "Henry"),
+  a= c(72, 84, 64, 60, 74, 88),
+  b= c(74, 84, 66, 58, 72, 87),
+  c= c(80, 88, 68, 64, 78, 88),
+  d= c(68, 76, 64, 58, 70, 72)
+)
+## a,b,c,d are variables- not the column names! The column names here represents variables
+## drugA, drugB, drugC, drugB are the actual column names
+non_tidy1
+```
+
+```{r}
+plot(non_tidy1)
+## R does not know what to plot since the data is not tidy
+## we need to make the data tidy
+```
+
+## make the code easier to plot by assigning column and value names. name this code as tidy1
+```{r}
+tidy1 <- non_tidy1 %>% 
+  gather (a, b, c, d, key = "drug", value ="heartrate") ##assemble these into key-value pairs; key is the new column name (called 'drug').enter value into drug ('heartrate')
+tidy1
+## this is one kind of untidy data
+```
+
+## Final check:try the plot command again. Need to specify x and y axes
+```{r}
+plot(tidy1$patient, tidy1$heartrate) ##just used for proof of concept to show that R understands that it is working with a vector
+```
+
+## Practice
+The data below track tuberculosis infection rates by year and country.
+```{r}
+country <- c("Afghanistan", "Brazil", "China")
+`1999` <- c(745, 37737, 212258)
+`2000` <- c(2666, 80488, 213766)
+tb_data <- data.frame(country=country, `1999`=`1999`, `2000`=`2000`)
+tb_data
+```
+
+## 1. Are these data tidy? Why not? Identify the specific problem(s).
+  ##  The data is not tidy since there are 2 rows for 1 column. We can consolidate 1999 and 2000 into the column "year".
+  ##  Even though column names and row names are both strings of data (which match), the data cannot be plotted in this format
+
+## 2. Use gather() to tidy the data.
+```{r}
+tidy <- tb_data %>% 
+  gather ('X1999','X2000', key= "year", value = "rate") ##assemble these into key-value pairs; key is the new column name (called 'year'). Assign value to "rate"
+tidy
+```
+
+## separate()
+In our next example, we have  the sex of each patient included with their name. Are these data tidy? No, there is more than one value per cell in the patient column and the columns a, b, c, d once again represent values.
+```{r}
+non_tidy2 <- data.frame(
+  patient= c("Margaret_f", "Frank_m", "Hawkeye_m", "Trapper_m", "Radar_m", "Henry_m"),
+  a= c(72, 84, 64, 60, 74, 88),
+  b= c(74, 84, 66, 58, 72, 87),
+  c= c(80, 88, 68, 64, 78, 88),
+  d= c(68, 76, 64, 58, 70, 72)
+)
+non_tidy2
+```
+
+## Separate name and sex in order to make the data tidy
+```{r}
+non_tidy2 %>% 
+  separate (patient, into= c("patient_nm", "sex"), sep="_") ##make sure to specify column name so it is not like the original data frame
+  ## look at patient column and separate patient name and sex by an underscore (_)
+```
+
+## data is still not tidy because of a, b, c, d. Gather the data
+This is great; we have separated sex from patient. Are the data tidy? Not yet. We still need to use `gather()`.
+```{r}
+tidy2<- non_tidy2 %>% 
+  separate(patient, into= c("patient_nm", "sex"), sep = "_") %>% 
+  gather(a, b, c, d, key="drug", value="heartrate")
+tidy2
+```
+
+## use rename () function: replace column names
+```{r}
+tidy3<- tidy2 %>% 
+  dplyr::rename(
+    MASH_character = patient_nm,
+    Sex= sex,
+    Drug= drug,
+    Heartrate_bpm=heartrate)
+tidy3 ## rename this new name data frame as tidy3
+```
+
+## Practice
+In this example study, ten participants were asked to categorize three face styles by clicking various buttons that represent three different categories (face 1, face 2, face 3). The time it took to click a button is in milliseconds.
+```{r}
+faces <- data.frame(
+  ParticipantID_sex = c("001_m", "002_f", "003_f", "004_f", "005_m", "006_f", "007_m", "008_m", "009_m", "010_f"),
+  Face_1 = c(411,723,325,456,579,612,709,513,527,379),
+  Face_2 = c(123,300,400,500,600,654,789,906,413,567),
+  Face_3 = c(1457,1000,569,896,956,2345,780,599,1023,678)
+)
+faces
+```
+
+## 1. Are these data tidy? Why or why not?  
+  ## The data is not tidy since there are 3 columns for the data set
+
+## 2. Tidy the data and place them into a new dataframe.
+```{r}
+## start by splitting ParticipantID_sex into 2 parts: ID and Sex
+face <- 
+  faces %>% 
+  separate(ParticipantID_sex, into= c("patient_id", "sex"), sep = "_") %>% ## separates by the _
+  gather(Face_1, Face_2, Face_3, key="face_style", value="time")
+face
+```
+
+3. Use `rename()` to rename a few columns for practice.
+```{r}
+ face1<-face %>% 
+  dplyr::rename(
+    Patient_Number = patient_id,
+    Sex= sex,
+    FaceType=face_style,
+    Time_millisecond= time
+    )
+face1
+## renaming the data table columns
+```
+

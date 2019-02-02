@@ -1,0 +1,183 @@
+---
+title: "dplyr::select(), mutate(), and pipes"
+author: "Pallavi Malladi"
+date: "Winter 2019"
+output:
+  html_document:
+    keep_md: yes
+    theme: spacelab
+    toc: yes
+    toc_float: yes
+  pdf_document:
+    toc: yes
+---
+## Load the tidyverse library
+```{r}
+library("tidyverse")
+```
+
+## Load the fish scale data by getting the working directory
+```{r}
+getwd
+```
+
+## copy and paste working directory 
+```{r}
+fish <- readr::read_csv("~/Desktop/FRS_417/class_files-master/Gaeta_etal_CLC_data.csv")
+## load .csv file with data on fish scales
+## Open the fule using read_csv()
+```
+
+##make sure we are in the correct working directory by creating a temporary frame
+```{r}
+temp_fish<-
+  readr::read_csv("~/Desktop/FRS_417/class_files-master/Gaeta_etal_CLC_data.csv")
+```
+
+## get information from data frame
+```{r}
+names(fish)
+```
+
+
+## filter()
+```{r}
+## will cr
+fish %>%
+  filter(lakeid=="AL",
+         length==167)
+```
+
+## Dplyr: select()
+Select allows you to build a new data frame by selecting your columns (variables) of interest. Our fish data only has six columns, but this should give you some ideas especially when you have large data frames with lots of columns.  
+
+## We are only interested in lakeid and scalelength.
+```{r}
+fish%>%
+  select(lakeid, scalelength)
+```
+
+## For very large data frames with lots of variables, `select()` uses many different operators to make things easier. Let's say we are only interested in the variables that deal with length.
+```{r}
+fish %>%
+  select(contains("length"))
+```
+
+```{r}
+fish %>%
+  select(ends_with("gth"))
+## gth is the last 3 letters of length
+## based on character string
+```
+
+## The `-` operator is useful in select. It allows us to select everything except the specified variables.
+```{r}
+select(fish, -fish_id, -annnumber, -length, -radii_length_mm)
+```
+
+## Practice
+## 1. Build a dataframe focused on the lakes `AL` and `AR` and looking at radii length between 2 and 4 only. Use pipes!
+## filter fish to include AL and AR lakeid with specifiec radii length
+```{r}
+fish %>% 
+  filter (lakeid=="AL" | lakeid=="AR") %>% 
+  filter(radii_length_mm>=2) %>% 
+  filter(radii_length_mm <=4)
+```
+
+##arrange length in increasing order
+```{r}
+fish %>% 
+  arrange (lakeid)
+```
+
+## shows count: how many different types of lakes there are
+```{r}
+fish %>% 
+  count (lakeid)
+## will tell how many lakes there are associated with each lakeid
+```
+
+## Practice
+Some additional options to select columns based on a specific criteria include:  
+1. ends_with() = Select columns that end with a character string  
+2. contains() = Select columns that contain a character string  
+3. matches() = Select columns that match a regular expression  
+4. one_of() = Select columns names that are from a group of names  
+
+## 1. What are the names of the columns in the `fish` data?
+```{r}
+colnames(fish)
+## produces the name of the column titles
+```
+
+## 2. We are only interested in the variables `lakeid`, `length`, and `scalelength`. Use `select()` to build a new dataframe focused on these variables.
+```{r}
+fish %>%
+  select(lakeid, length, scalelength)
+```
+
+## Dplyr: Can we combine filter() and select()?
+Absolutely. This is one of the strengths of the tidyverse, it uses the same grammar to specify commands.
+
+```{r}
+fish2 <- select(fish, lakeid, scalelength)
+## creates a new data frame with selected columns from original fish data
+```
+
+```{r}
+filter(fish2, lakeid=="AL")
+## filters fish2 data frame to include fish from AL only. Still prints the scalength as well
+```
+
+## Dplyr: Pipes %>% 
+##The code above works fine but there is a more efficient way. We need to learn pipes `%>%`. Pipes allow you to feed the output from one function to the input of another function. We are going to use pipes from here on to keep things cleaner. (command+shift+m)
+```{r}
+fish%>%
+  select(lakeid, scalelength)%>%
+  filter(lakeid=="AL")
+## filter
+```
+
+## Dplyr: arrange()
+The `arrange()` command allows us to sort values in a column.
+```{r}
+fish %>% 
+  arrange(desc(scalelength))
+```
+
+It can be very helpful in combination with the other functions.
+```{r}
+fish %>% 
+  select(lakeid, length, fish_id, scalelength) %>% 
+  filter(lakeid=="AL") %>% 
+  arrange(fish_id)
+```
+
+## 2. Build a dataframe focused on the scalelengths of `fish_id` 300 and 301. Use `arrange()` to sort from smallest to largest scalelength. Use pipes!
+```{r}
+fish %>% 
+  filter(fish_id=="300" | fish_id=="301") %>% 
+  arrange (scalelength)
+```
+
+
+## Dplyr: mutate(): mutate() allows us to create new columns in a data frame
+## When you use mutate() the original data used are preserved
+```{r}
+fish %>% 
+  select(lakeid, fish_id, scalelength, length) %>% ## filter this into..
+  filter(lakeid=="AL") %>% ## filter this further into...
+  arrange (fish_id) %>% ## via increasing order
+  mutate(scale_ratio=(length/scalelength)) ## new column name will be scale_ratio
+  ## values in scale_ration specified by equation length/scalelength
+```
+
+## Practice
+## 1. Add a new column to the fish data that is radii_length_mm divided by scalelength. Add another column that scales this number to a percentage.
+```{r}
+fish %>% 
+  mutate(radii_ratio=(radii_length_mm/scalelength)) %>% ## creates new equation
+  mutate(percent_ratio= radii_ratio * 100 ) ##converts answer to %
+```
+
