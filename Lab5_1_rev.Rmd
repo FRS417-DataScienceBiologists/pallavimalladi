@@ -1,0 +1,252 @@
+---
+title: "Data Visualization 1"
+author: "Pallavi Malladi"
+date: "Winter 2019"
+output:
+  html_document:
+    keep_md: yes
+    theme: spacelab
+    toc: yes
+    toc_float: yes
+  pdf_document:
+    toc: yes
+---
+##Plots are built in layers
+## What makes a good chart? Its elegance and simplicity. It provides a clean, clear visual of the data without being overwhelming to the reader.
+## Data Types
++  `discrete` quantitative data that only contains integers
++ `continuous` quantitative data that can take any numerical value
++ `categorical` qualitative data that can take on a limited number of values
+
+## Basics: **plot= data + geom_ + aesthetics**  
+## Load the libraries
+```{r message=FALSE, warning=FALSE}
+library("tidyverse")
+library("skimr")
+```
+
+```{r}
+?iris ##provides overview of iris data
+```
+
+```{r}
+?iris
+names(iris) ##gives category (column names) for iris
+```
+
+```{r}
+iris <-
+  iris ##puts iris data into a new object so that we can look at iris data quickly
+```
+
+## To make a plot, we need to first specify the data and map the aesthetics. The aesthetics include how each variable in our dataset will be used. In the example below, I am using the aes() function to identify the x and y variables in the plot.
+```{r}
+ggplot(data=iris, mapping=aes(x=Species, y=Petal.Length)) ## we named Species and Petal.length based on names(iris)
+```
+
+## Notice that we have a nice background, labeled axes, and even values of our variables- but no plot. This is because we need to tell ggplot what type of plot we want to make. This is called the geometry or `geom()`.Here we specify that we want a boxplot, indicated by `geom_boxplot()`.
+```{r}
+ggplot(data=iris, mapping=aes(x=Species, y=Petal.Length))+
+  geom_boxplot() ##creates a boxplot based on the ggplot data from x and y axes
+## We add a "+" bc plots are built in layers
+## First layer is the data in the plot; Second layer is the design of the plot
+```
+
+## Practice
+1. Take a moment to practice. Use the iris data to build a scatterplot that compares sepal length vs. sepal width. Use the cheatsheet to find the correct `geom_` for a scatterplot.
+```{r}
+ggplot(data=iris, mapping=aes(x=Sepal.Width, y=Sepal.Length))+
+  geom_point() ##plots data in iris (Species.Width, Sepal.Length) as a scatterplot diagram
+```
+
+ ##Two standard plots: 1) scatterplots and 2) barplots.
+
+
+**Database of vertebrate home range sizes.Import from classfiles**
+
+```{r message=FALSE, warning=FALSE}
+homerange <- readr::read_csv("~/Desktop/FRS_417/class_files-master/Tamburelloetal_HomeRangeDatabase.csv")
+```
+```{r}
+homerange
+```
+
+A little bit of cleaning to focus on the variables of interest. Good `dplyr` practice!
+```{r}
+homerange <- ##modifies homerange to select for these categories
+  homerange %>%  
+  select(common.name, taxon, family, genus, species, mean.mass.g, log10.mass, mean.hra.m2, log10.hra, preymass, log10.preymass, trophic.guild)
+```
+
+```{r}
+names(homerange)
+```
+
+### 1. Scatter Plots
+##Scatter plots are good at revealing relationships that are not readily visible in the raw data. For now, we will not add regression lines or calculate any r^2^ values. In this case, we are exploring whether or not there is a relationship between animal mass and homerange. We are using log transformed values because there is a very large difference in mass and homerange among the different  species in the data.
+
+##Scatter plot deals with numerical data, not categorical
+```{r}
+ggplot(data=homerange, mapping=aes(x=log10.mass, y=log10.hra)) +
+  geom_point()
+## Is there an association between size of the beast and the area it requires to live? Hopefully, the answer is yes since larger beasts require more space to live
+
+## The scatter plot is linear--> there is a correlation between mass and homerange area
+## There is a lot of overlap between some points (dense areas) --> we can use geom_jitter to clean up the plot
+```
+
+## In big data sets with lots of similar values, overplotting can be an issue. `geom_jitter()` is similar to `geom_point()` but it helps with overplotting by adding some random noise to the data and separating some of the individual points.
+```{r}
+ggplot(data=homerange, mapping=aes(x=log10.mass, y=log10.hra)) +
+  geom_jitter()
+```
+
+##Adding in a linear regression line
+```{r}
+ggplot(data=homerange, mapping=aes(x=log10.mass, y=log10.hra)) +
+  geom_jitter()+
+  geom_smooth(method=lm, se=FALSE) 
+## method = lm means that we are adding in a smooth lm (linear model)
+```
+
+### 2A. Bar Plot: `stat="count"` When making a bar graph, the default is to count the number of observations in the specified column. This is best for categorical data and is defined by the aesthetic `stat="count"`. Here, I want to know how many carnivores vs. herbivores are in the data.  
+## Bar plots are best suited for categorical data
+
+## Notice that we can use pipes and the `mapping=` function is implied by `aes` and so is often left out (Bc ggplot already understands it's mapping)  
+
+#### we cannot specify a y variable for a geom_bar. By default, it creates a count on the y-axis
+```{r}
+homerange %>% 
+  ggplot(aes(x=trophic.guild))+ ##trophic guild represents carnivore, herbivore, omnivore, etc
+  geom_bar(stat="count") # I am identifying stat="count" but this isn't necessary since it is default
+## x axis is the trophic guild and y axis represents the number of each type of trophic guild (the count of each)
+```
+##we can also remove the stat="count" since the y-axis will automatically create a count-like axis
+```{r}
+homerange %>% 
+  ggplot(aes(x=trophic.guild))+ ##trophic guild represents carnivore, herbivore, omnivore, etc
+  geom_bar()
+```
+
+
+### 2B. Bar Plot: `stat="identity"`
+`stat="identity"` allows us to map a variable to the y axis so that we aren't restricted to count. Let's use our dplyr skills to first filter out carnivorous mammals and see which families have the highest mean body weight.
+```{r}
+carni_mammals <- 
+  homerange %>% 
+  filter(taxon=="mammals", 
+         trophic.guild=="carnivore") %>% 
+  group_by(family) %>% ## groups by families that are within the carnivourous trophic guild
+  summarize(count=n(),
+            mean_body_wt=mean(log10.mass)) %>% 
+  arrange(desc(mean_body_wt))
+carni_mammals ## shows the carnivores and their families by decreasing body weight
+```
+
+##Visualize the previous code(body weight of carnivores in different families) by creating a plot
+Now let's plot the data using `stat="identity"` to help visualize these differences.
+```{r}
+carni_mammals%>% 
+  ggplot(aes(x=family, y=mean_body_wt))+
+  geom_bar(stat="identity")
+##plots the different body weights on the y-axis instead of count
+```
+
+## This looks nice, but the x axis is a mess and needs adjustment. We make these adjustments using `theme()`. 
+## Adjust the angle of the text on the x-axis
+```{r}
+carni_mammals%>% 
+  ggplot(aes(x=family, y=mean_body_wt))+
+  geom_bar(stat="identity")+
+  theme(axis.text.x = element_text(angle = 60, hjust=1)) ##Change the angle of the text on the x-axis to 60 degrees
+## hjudt=1 adjusts the length of the text next to the bar (placement of the text on the x-axis)
+```
+
+##We can make this a little bit better by reordering.
+```{r}
+carni_mammals%>% 
+  ggplot(aes(x=reorder(family, -mean_body_wt), y=mean_body_wt))+ ##reorder will label data as ascending or descending based on if mean_body_wt is - or +
+  geom_bar(stat="identity")+
+  theme(axis.text.x = element_text(angle = 60, hjust=1))
+```
+
+##Turn the plot on its side; flip the coordinates.
+```{r}
+carni_mammals%>% 
+  ggplot(aes(x=reorder(family, -mean_body_wt), y=mean_body_wt))+
+  geom_bar(stat="identity")+
+  coord_flip()
+```
+
+## Practice
+Filter the `homerange` data to include `mammals` only.
+```{r}
+mammals <- 
+  homerange %>% 
+  filter(taxon=="mammals") %>% 
+  select(common.name, family, genus, species, trophic.guild, mean.mass.g, log10.mass, mean.hra.m2, log10.hra, preymass, log10.preymass)
+```
+
+```{r}
+mammals
+```
+
+##1. Are there more herbivores or carnivores in mammals? Make a bar plot that shows their relative proportions.
+```{r}
+mammals %>% 
+  ggplot(aes(x=trophic.guild))+ ##trophic guild represents carnivore, herbivore, omnivore, etc
+  geom_bar()
+## We can tell that there are more herbivores by looking at the bar plot of mammals and plotting the trophic guild on the x axis
+```
+
+```{r}
+names(mammals)
+```
+
+##2. Is there a positive or negative relationship between mass and homerange? How does this compare between herbivores and carnivores? Make two plots that illustrate these eamples below.  
+## USe dyplr functions such as filter, select, etc
+carnivores
+```{r}
+mammals %>% 
+  filter (trophic.guild=="carnivore") %>%
+  ggplot(aes(x=log10.mass, y=log10.hra)) + ##make a plot based off of the carnivore trophic guild 
+  geom_point()+
+  geom_smooth(method=lm, se=FALSE) 
+```
+
+herbivores
+```{r}
+mammals %>% 
+  filter (trophic.guild=="herbivore") %>%
+  ggplot(aes(x=log10.mass, y=log10.hra)) + ##make a plot based off of the herbivore trophic guild 
+  geom_point()+
+  geom_smooth(method=lm, se=FALSE) 
+```
+
+##3. Make a barplot that shows the masses of the top 10 smallest mammals in terms of mass. Be sure to use `stat'="identity"`.
+## Hard Way
+```{r}
+homerange %>% 
+  filter(taxon=="mammals") %>% 
+  select(common.name, mean.mass.g) %>% 
+  arrange (mean.mass.g)
+## cinereus shrew is the mammal w smallest mass 
+```
+
+## Easy way
+```{r}
+mammals %>% 
+  top_n(-10, log10.mass) %>% ##gives the top 10 smallest mammals
+  ggplot(aes(x=common.name, y = log10.mass))+
+  geom_bar (stat="identity")+
+  coord_flip()
+```
+
+## Make the bar plot from #3 look prettier! This will show the bar plot in increasing order!
+```{r}
+ mammals %>% 
+  top_n(-10, log10.mass) %>% ##gives the top 10 smallest mammals
+  ggplot(aes(x=reorder(common.name,log10.mass), y = log10.mass))+
+  geom_bar (stat="identity")+
+  coord_flip()
+```

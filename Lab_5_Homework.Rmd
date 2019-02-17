@@ -1,0 +1,101 @@
+---
+title: "Lab 5 Homework"
+author: "Pallavi Malladi"
+date: "Winter 2019"
+output:
+  html_document:
+    keep_md: yes
+    theme: spacelab
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load the tidyverse
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+```
+
+## Mammals Life History
+Let's revisit the mammal life history data to practice our `ggplot` skills. Some of the tidy steps will be a repeat from the homework, but it is good practice. The [data](http://esapubs.org/archive/ecol/E084/093/) are from: *S. K. Morgan Ernest. 2003. Life history characteristics of placental non-volant mammals. Ecology 84:3402.*
+
+## 1. Load the data.
+```{r}
+life_history <- readr::read_csv("~/Desktop/FRS_417/class_files-master/mammal_lifehistories_v2.csv")
+```
+
+
+## 2. Use your preferred function to have a look. Do you notice any problems?
+```{r}
+life_history
+## Looking at the data, we see that the data in the frame is currently tidy. The problem in life_history is that there were a relative large number of null values (represented by -999). We replaced -999 with NA values.
+```
+
+## 3. There are NA's. How are you going to deal with them?
+## The NA's are represented by -999
+```{r}
+life_history<-
+  life_history %>% 
+  na_if(-999)
+## In class, we learned how -999 is sometimes used to represent values where there is no data entry, so I checked for any -999 values that may be in place for NA. If there was an -999, I replacd it with an NA so that it would be easier to identify where the null value is located within the data frame. 
+```
+
+## 4. Where are the NA's? This is important to keep in mind as you build plots.
+```{r}
+number_nas= sum(is.na(life_history))
+life_history %>%
+  purrr::map_df(~ sum(is.na(.))) %>%  ##shows how many NA values and where they are within the data frame
+  tidyr::gather(variables, number_nas) %>% ##I had to get help from GitHub to understand the last 2 lines here
+  arrange(desc(number_nas))
+```
+
+## 5. Some of the variable names will be problematic. Let's rename them here as a final tidy step.
+```{r}
+life_history <-
+  life_history %>% 
+  dplyr::rename(
+          genus        = Genus,
+          wean_mass    = `wean mass`,
+          max_life     = `max. life`,
+          litter_size  = `litter size`,
+          litters_yr   = `litters/year`
+          )
+life_history
+```
+
+```{r}
+options(scipen=999) #cancels the use of scientific notation for the session
+```
+
+## 6. What is the relationship between newborn body mass and gestation? Make a scatterplot that shows this relationship. 
+```{r}
+names(life_history) ##shows column names for data frame so we know what to use for axes headers
+```
+
+```{r}
+ggplot(data=life_history, mapping=aes(x=gestation, y=log10(newborn))) + ##wean mass=newborn body mass
+  geom_jitter() +
+   geom_smooth(method=lm, se=FALSE) ## method = lm means that we are adding in a smooth lm (linear model)
+##I took the log10 of wean mass because the y-axis had a range that was too large for the graph. With log, the graph has a more understandable range
+##Answer: The relationship between newborn body mass and gestation is a positive correlation. The longer the gestation period, the larger the mammal would be at birth.
+```
+
+
+## 7. You should notice that because of the outliers in newborn mass, we need to make some changes. We didn't talk about this in lab, but you can use `scale_x_log10()` as a layer to correct for this issue. This will log transform the y-axis values.
+```{r}
+life_history %>% 
+  ggplot(aes(x=newborn, y=gestation))+
+  scale_x_log10()+ ## removes outliers from newborn mass data
+  geom_jitter()+
+   geom_smooth(method=lm, se=FALSE)
+## This is the same function as the code before, but this coded uses scale_x_log10() instead of log10().
+```
+
+
+## Do not do #8,9,10 for Homework 5!
+## 8. Now that you have the basic plot, color the points by taxonomic order.
+
+## 9. Lastly, make the size of the points proportional to body mass.
+
+## 10. Make a plot that shows the range of lifespan by order.
