@@ -1,0 +1,115 @@
+---
+title: "Midterm Exam"
+date: "Winter 2019"
+output:
+  html_document:
+    theme: spacelab
+    toc: no
+    toc_float: no
+  pdf_document:
+    toc: yes
+---
+
+## Instructions
+This exam is designed to show me what you have learned and where there are problems. You may use your notes and anything from the `class_files` folder, but please no internet searches. You have 35 minutes to complete as many of these exercises as possible on your own, and 10 minutes to work with a partner.  
+
+At the end of the exam, upload the complete .Rmd file to your GitHub repository.  
+
+1. Load the tidyverse.
+```{r}
+library(tidyverse)
+```
+
+
+2. For these questions, we will use data about California colleges. Load the `ca_college_data.csv` as a new object called `colleges`.
+```{r}
+colleges<-readr::read_csv("~/Desktop/FRS_417/class_files-master/data/ca_college_data.csv")
+```
+
+
+3. Use your preferred function to have a look at the data and get an idea of its structure.
+```{r}
+glimpse(colleges) ##Shares number of observations, number of variavles, and column names
+```
+
+
+4. What are the column names?
+```{r}
+names(colleges)
+## Shows 10 column names specified within "college" data frame
+```
+
+
+5. Are there any NA's in the data? If so, how many are present and in which variables?
+```{r}
+colleges %>% 
+  summarize(number_nas= sum(is.na(colleges)))
+## There are 949 NA values within the data
+```
+
+```{r}
+number_nas= sum(is.na(colleges))
+colleges %>%
+  purrr::map_df(~ sum(is.na(.))) %>%  ## where NAs are located within the data frame (also shows how many are in each variable)
+  tidyr::gather(Variables, number_nas) %>% ## displays variable name and number of NA's within that column (there should be 10 rows for 10 vaiables)
+  arrange(desc(number_nas))
+```
+
+
+6. Which cities in California have the highest number of colleges?
+```{r}
+colleges %>% 
+  group_by(CITY) %>% 
+  total = n() %>% 
+  arrange(desc(total))
+```
+
+
+7. The column `COSTT4_A` is the annual cost of each institution. Which city has the highest cost?
+```{r}
+colleges %>% 
+  arrange(desc(COSTT4_A))
+## Harvey Mudd College has the highest annual cost
+```
+
+8. The column `ADM_RATE` is the admissions rate by college and `C150_4_POOLED` is the four-year completion rate. Use a scatterplot to show the relationship between these two variables. What does this mean?
+```{r}
+colleges %>% 
+  ggplot(aes(x=ADM_RATE, y=C150_4_POOLED))+
+  geom_point() +
+  geom_smooth(method=lm)
+## There is a negative relationship between admissions rate and 4 year completion rate. This means that the higher the admissions rate, the lower the 4-year completion rate
+```
+
+
+9. The column titled `INSTNM` is the institution name. We are only interested in the University of California colleges. Run the code below and look at the output. Are all of the columns tidy? Why or why not?
+```{r}
+univ_calif<-
+  colleges %>% 
+  filter_all(any_vars(str_detect(.,pattern= "University of California")))
+univ_calif
+## The data is  tidy since each college has 9 corresponding columns with it. Each row represents each individual college and its provided data.
+```
+
+
+10. Use `separate()` to separate institution name into two new columns "UNIV" and "CAMPUS".
+```{r}
+ colleges %>% 
+  separate(INSTNM, into= c("UNIV", "CAMPUS"), sep = " ")
+```
+
+
+11. As a final step, remove `Hastings College of Law` and `UC San Francisco` and store the final data frame as a new object `univ_calif_final`.
+```{r}
+univ_calif_final<-colleges %>% 
+  mutate(INSTNM =="Hastings College" & INSTNM =="UC San Francisco")
+univ_calif_final
+```
+
+
+12. The column `ADM_RATE` is the admissions rate by campus. Which UC has the lowest and highest admissions rates? Please use a barplot.
+```{r}
+ggplot(data=univ_calif, mapping=aes(x=INSTNM, y=ADM_Rate))+
+  geom_bar()
+```
+
