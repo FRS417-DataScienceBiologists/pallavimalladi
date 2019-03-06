@@ -1,0 +1,175 @@
+---
+title: "Visualizing Data 3"
+author: "Pallavi Malladi"
+date: "Winter 2019"
+output:
+  html_document:
+    keep_md: yes
+    theme: spacelab
+    toc: yes
+    toc_float: yes
+  pdf_document:
+    toc: yes
+---
+## Load the libraries
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+```
+
+```{r}
+options(scipen=999) #cancels the use of scientific notation for the session
+```
+
+```{r message=FALSE, warning=FALSE}
+homerange <- 
+  readr::read_csv("~/Desktop/FRS_417/class_files-master/data/Tamburelloetal_HomeRangeDatabase.csv", na = c("", " ", "NA", "#N/A", "-999", "\\")) ##Replaces the -999 values w NA immediately as the data file is read into R
+homerange
+```
+```{r}
+names(homerange)
+```
+
+
+## Barplots revisited
+At this point you should be able to build a barplot that shows counts of observations in a variable using `geom_bar()`. But, you should also be able to use `stat="identity"` to specify both x and y axes.  
+
+## Here is the plot using `geom_bar(stat="identity")`
+```{r}
+homerange %>% 
+  filter(family=="salmonidae") %>% #filter for salmonid fish only
+  ggplot(aes(x=common.name, y=log10.mass))+
+  geom_bar(stat="identity")
+```
+
+## Practice
+Although we did not use it last time, `geom_col()` is the same as specifying `stat="identity"` using `geom_bar()`.     
+1. Make the same plot above, but use `geom_col()`
+```{r}
+homerange %>% 
+  filter(family=="salmonidae") %>% #filter for salmonid fish only
+  ggplot(aes(x=common.name, y=log10.mass, fill=common.name))+ ##fills color based on the common names
+  geom_col()
+```
+
+## Barplots and multiple variables
+Last time we explored the `fill` option in boxplots as a way to bring color to the plot; i.e. we filled by the same variable that we were plotting. What happens when we fill by a different categorical variable? 
+Let's start by counting how many obervations we have in each taxonomic group.
+```{r}
+homerange %>% 
+  count(taxon)
+```
+
+Now let's make a barplot of these data.
+```{r}
+homerange %>% 
+  ggplot(aes(x=taxon, fill=taxon))+ ## fills by taxon
+  geom_bar(alpha=0.9, na.rm=TRUE)+
+  coord_flip()+
+  labs(title = "Observations by Taxon in Homerange Data",
+       x = "Taxonomic Group")
+```
+
+By specifying `fill=trophic.guild` we build a stacked bar plot that shows the proportion of a given taxonomic group that is an herbivore or carnivore.
+```{r}
+homerange %>% 
+  ggplot(aes(x=taxon, fill=trophic.guild))+ ##makes a stacked bar blot with trophic guild and taxon
+  geom_bar(alpha=0.9, na.rm=T)+
+  coord_flip()+
+  labs(title = "Observations by Taxon in Homerange Data",
+       x = "Taxonomic Group",
+       fill= "Trophic Guild")
+```
+
+We can also have the proportions of each trophic guild within taxonomic group shown side-by-side by specifying `position="dodge"`.
+```{r}
+homerange %>% 
+  ggplot(aes(x=taxon, fill=trophic.guild))+ ##filling by a different categorical variable than x axis (taxon)
+  geom_bar(positiion="dodge")+
+  theme(legend.position = "right",
+        axis.text.x = element_text(angle = 60, hjust=1))+
+  labs(title = "Observations by Taxon in Homerange Data",
+       x = "Taxonomic Group",
+       fill= "Trophic Guild")+
+coord_flip()
+```
+
+## Practice
+1. Make a barplot that shows locomotion type by `primarymethod`. Try both a stacked barplot and `position="dodge"`.
+```{r}
+homerange %>% 
+  ggplot(aes(x=locomotion, fill=primarymethod))+
+  geom_bar(position="dodge") ##without position="dodge", the bar plot would be stacked (may be harder to read)!
+```
+
+```{r}
+homerange %>% 
+  ggplot(aes(x=locomotion, fill=primarymethod)) +
+  geom_bar(position=position_fill(), stat="count")+ ## stat="count" is default but we are adding it in for reference purposes
+  scale_y_continuous(labels=scales::percent) ##changes scales to percent format
+```
+
+## Histograms and Density Plots
+
+## Need to specify number of counts and bends in a histogram, but this may not always be clear based on types of data given
+## Histograms are frequency distribution plots
+What does the distribution of body mass look like in the homerange data?
+```{r}
+homerange %>% 
+  ggplot(aes(x=log10.mass)) +
+  geom_histogram(fill="steelblue", alpha=0.8, color="black")+ ##using geom_histogram and making it "pretty"; alpha control the transparency levels; color describes the outline color
+  labs(title = "Distribution of Body Mass")
+```
+
+```{r}
+homerange %>% 
+  ggplot(aes(x=log10.mass)) +
+  geom_histogram()+ ##using geom_histogram
+  labs(title = "Distribution of Body Mass")
+## This is the histogram without making it more pretty!
+```
+
+
+`Density plots` are similar to histograms but they use a smoothing function to make the distribution more even and clean looking. They do not use bins.; ## No bins in the histogram; graph will look like a curve
+```{r}
+homerange %>% 
+  ggplot(aes(x=log10.mass)) +
+  geom_density(fill="steelblue", alpha=0.4)+
+  labs(title = "Distribution of Body Mass")
+```
+
+##Both the histogram and the density curve so I often plot them together. Note that I assign the density plot a different color.
+```{r message=FALSE}
+homerange %>% 
+  ggplot(aes(x=log10.mass)) +
+  geom_histogram(aes(y = ..density..), binwidth = .4, fill="steelblue", alpha=0.8, color="black")+
+  geom_density(color="red")+
+  labs(title = "Distribution of Body Mass")
+##This will plot both the density graph and the histogram plot 
+```
+
+## Practice
+1. Make a histogram of `log10.hra`. Make sure to add a title.
+```{r}
+homerange %>% 
+  ggplot(aes(x=log10.hra))+
+  geom_histogram(fill="yellow", alpha=0.3, color="black")+
+  labs(title = "Distribution of HRA")
+```
+
+
+2. Now plot the same variable using `geom_density()`.
+```{r}
+homerange %>% 
+  ggplot(aes(x=log10.hra))+
+  geom_density(fill="orange", alpha=0.3, color="black")+
+  labs(title = "Distribution of HRA")
+```
+
+3. Combine them both!
+```{r}
+homerange %>% 
+  ggplot(aes(x=log10.hra))+
+  geom_histogram(aes(y=..density..), binwidth = 0.5, fill="orchid", alpha=0.7, color="black")+
+  geom_density(color="brown")
+  labs(title = "Distribution of HRA")
+```

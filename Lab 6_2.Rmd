@@ -1,0 +1,183 @@
+---
+title: "Visualizing Data 4"
+author: "Pallavi Malladi"
+date: "Winter 2019"
+output:
+  html_document:
+    keep_md: yes
+    theme: spacelab
+    toc: yes
+    toc_float: yes
+  pdf_document:
+    toc: yes
+---
+## Load the tidyverse
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+options(scipen=999)
+```
+
+```{r message=FALSE, warning=FALSE}
+homerange <- 
+  readr::read_csv("~/Desktop/FRS_417/class_files-master/data/Tamburelloetal_HomeRangeDatabase.csv", na = c("", " ", "NA", "#N/A", "-999", "\\")) ##Replaces the -999 values w NA immediately as the data file is read into R
+homerange
+```
+
+## Review color and fill options
+We have learned that there are a variety of color and fill options in `ggplot`. These are helpful in making plots more informative and visually appealing; i.e., in this scatterplot we show the relationship between mass and homerange while coloring the points by a different variable.
+```{r}
+homerange %>% 
+  ggplot(aes(x=log10.mass, y=log10.hra, color=locomotion))+
+  geom_point()
+```
+
+We can change the color of the points universally instead of using `fill`, but we need to put this into a different layer and specify the exact color. Notice the different options! Experiment by adjusting them.
+```{r}
+homerange %>% 
+  ggplot(aes(x=log10.mass, y=log10.hra))+
+  geom_point()+ ##color=black will add a black edge around each point
+  scale_colour_brewer(palette="Dark2") ##points will look more interesting if we add differnet color
+##use size to control point size; # shape controls circularity
+```
+
+## Practice
+1. Make a barplot that shows counts of animals by taxonomic class. Fill by thermoregulation type.
+```{r}
+homerange %>% 
+  ggplot(aes(x=class, fill=thermoregulation))+
+  geom_bar()
+## if we fill we fill by thermoregulation, it adds color based on ectotherm/endotherm
+```
+
+2. Make a box plot that shows the range of log10.mass by taxonomic class. Use `group` to cluster animals together by taxon and `fill` to color each box by taxon.
+```{r}
+homerange %>% 
+  ggplot(aes(x=class, y=log10.mass, group=taxon, fill=taxon))+ ## "fill" shows breakdown of taxa in each class
+  geom_boxplot()
+## Graphing taxa my mass!!
+##There are many different taxa associated with class
+## Ex. within actinoterygii class, there are 3 taxa, but there is only 1 taxa within aves class
+## Black line between box represents median' points outside the box represent outliers
+```
+
+## Adjusting the x and y limits
+There are many options for adjusting the x and y axes. To adjust limits, we can use the `xlim` and `ylim` commands. When you do this, any data outside the specified ranges are not plotted. ##This will remove the values of points that are outside the range
+```{r}
+homerange %>% 
+  ggplot(aes(x=log10.mass, y=log10.hra, color=locomotion))+
+  geom_point()+
+  xlim(0, 4)+
+  ylim(1, 6)
+```
+
+## Faceting: `facet_wrap()`
+Faceting allows you to make multi-panel plots for easy comparison. Make histograms of log10.mass for every taxon. We read the `~` in the `facet_wrap()` layer as `by`.
+```{r}
+homerange %>% 
+  ggplot(aes(x = log10.mass)) +
+  geom_histogram() +
+  facet_wrap(~taxon) ##"facet wrap by tilda taxon"- provides individual histograns for each of the taxa
+```
+
+## Faceting: `facet_grid()` 
+##tends to work only if you are faceting by groups with only few categories (ex. 2 categories in trophic guild=good for facet_grid())
+## `facet_grid`. This can be helpful when you facet by only a few variables.
+```{r}
+homerange %>% 
+  ggplot(aes(x = log10.mass)) +
+  geom_histogram() +
+  facet_grid(~thermoregulation)+
+  scale_colour_brewer(palette = "Dark2") ##points will look more interesting if we add different color
+```
+
+## Practice
+1. Use faceting to produce density distributions of log10.mass by taxonomic class.
+##faceting will work on any type of plot (bar, point, histogram, etc)
+```{r}
+homerange %>% 
+  ggplot(aes(x=log10.mass))+
+  geom_density(fill="orchid", alpha=0.8)+
+  facet_grid(~class)
+facet_wrap(~thermoregulation)
+## Makes 4 separate graphs for the 4 classes available
+```
+
+## RColorBrewer; library with various coor options (making a customized color palette)
+```{r}
+#install.packages("RColorBrewer")
+library("RColorBrewer")
+```
+
+Access the help for RColor Brewer.
+```{r}
+?RColorBrewer
+```
+
+##Three different palettes: 1) sequential, 2) diverging, and 3) qualitative. Within each of these there are several selections. You can bring up the colors by using `display.brewer.pal()`. Specify the number of colors that you want and the palette name.
+```{r}
+display.brewer.pal(8,"BrBG")
+## Shows 8 colors of a specific palette; we can see different number of colors if we want; change 8-->4, etc
+```
+
++`scale_colour_brewer()` is for points  
++`scale_fill_brewer()` is for fills  
+```{r}
+homerange %>% 
+  ggplot(aes(x=log10.mass, y=log10.hra, color=locomotion))+ ##mass by homerange; coloring by locomotion
+  geom_point(size=1.5, alpha=0.8)
+##regular graph
+```
+
+```{r}
+homerange %>% 
+  ggplot(aes(x=log10.mass, y=log10.hra, color=locomotion))+ ##mass by homerange; coloring by locomotion
+  geom_point(size=1.5, alpha=0.8)+
+scale_colour_brewer(palette = "Dark2") ##points will look more interesting if we add different color
+##fancier graph
+```
+
+```{r}
+homerange %>% 
+  ggplot(aes(x=thermoregulation, fill=thermoregulation))+
+  geom_bar()+
+  labs(title = "Thermoregulation Counts",
+       x = "Thermoregulation Type",
+       y = "# Individuals")+ 
+  theme(plot.title = element_text(size = rel(1.25)))+
+  scale_fill_brewer(palette = "Dark2")
+```
+```{r}
+##install.packages("paletteer")
+```
+
+
+```{r}
+library("paletteer")
+```
+```{r}
+colors<-
+  paletteer::palettes_d_names
+```
+
+```{r}
+simpsons<-
+  paletteer_d(package="ggsci", palette="springfield_simpsons")
+barplot(rep(1,14),axes = FALSE, col=simpsons) ## we can pull up a color palette
+```
+
+```{r}
+homerange %>% 
+  ggplot(aes(x=thermoregulation, fill=thermoregulation))+
+  geom_bar()+
+  scale_fill_manual(values=simpsons) ##points will look more interesting if we add differnet color
+##use size to control point size; # shape contr
+```
+
+## Practice
+1. Build a dodged bar plot that shows the number of carnivores and herbivores filled by taxonomic class. Use a custom color theme.
+```{r}
+homerange %>%
+  ggplot(aes(x=trophic.guild, fill=class)) +
+  geom_bar(alpha=0.6, position="dodge")+ ##dodge will keep bars side by side instead of stacked
+  scale_fill_brewer(palette = "Dark4")
+```
